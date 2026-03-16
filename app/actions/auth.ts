@@ -47,21 +47,25 @@ export async function signup(formData: FormData) {
     }
 
     const passwordHash = await hash(password, 10);
+    try {
+        const user = await prisma.user.create({
+            data: {
+                name,
+                email,
+                passwordHash,
+            },
+        });
 
-    const user = await prisma.user.create({
-        data: {
-            name,
-            email,
-            passwordHash,
-        },
-    });
-
-    await login({
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-    });
+        await login({
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+        });
+    } catch (e) {
+        console.error("Signup error details:", e);
+        return { error: "Xogta lama kaydin karo hadda. Fadlan mar kale isku day." };
+    }
 
     redirect("/");
 }
@@ -88,12 +92,17 @@ export async function loginAction(formData: FormData) {
         return { error: "Iimaylka ama erayga sirta ah waa khalad." };
     }
 
-    await login({
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-    });
+    try {
+        await login({
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+        });
+    } catch (e) {
+        console.error("Login error details:", e);
+        return { error: "Waxa dhacay qalad xagga xiriirka ah." };
+    }
 
     redirect("/");
 }
