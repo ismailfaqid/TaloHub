@@ -67,7 +67,7 @@ export async function signup(formData: FormData) {
         return { error: "Xogta lama kaydin karo hadda. Fadlan mar kale isku day." };
     }
 
-    redirect("/");
+    return { success: true };
 }
 
 export async function loginAction(formData: FormData) {
@@ -104,7 +104,7 @@ export async function loginAction(formData: FormData) {
         return { error: "Waxa dhacay qalad xagga xiriirka ah." };
     }
 
-    redirect("/");
+    return { success: true };
 }
 
 export async function logoutAction() {

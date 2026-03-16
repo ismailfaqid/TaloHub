@@ -30,8 +30,11 @@ export default function SignupPage() {
             if (result?.error) {
                 setError(result.error);
                 setIsLoading(false);
+            } else if (result?.success) {
+                router.push("/");
             }
         } catch (err) {
+            console.error("Signup submission error:", err);
             setError("Waxbaa khaldamay, fadlan isku day markale.");
             setIsLoading(false);
         }

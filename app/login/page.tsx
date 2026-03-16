@@ -9,6 +9,7 @@ import { loginAction } from "@/app/actions/auth";
 import { useState } from "react";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { Logo } from "@/components/main/Logo";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
     const { t: translations } = useLanguage();
@@ -16,6 +17,7 @@ export default function LoginPage() {
     const tc = translations.common;
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const router = useRouter();
 
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -29,8 +31,11 @@ export default function LoginPage() {
             if (result?.error) {
                 setError(result.error);
                 setIsLoading(false);
+            } else if (result?.success) {
+                router.push("/");
             }
         } catch (err) {
+            console.error("Login submission error:", err);
             setError(tc.error);
             setIsLoading(false);
         }
