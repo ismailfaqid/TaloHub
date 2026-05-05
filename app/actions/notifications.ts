@@ -5,13 +5,18 @@ import { getSession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 
 export async function getNotifications() {
-    const session = await getSession();
-    if (!session || !session.user) return [];
+    try {
+        const session = await getSession();
+        if (!session || !session.user) return [];
 
-    return await prisma.notification.findMany({
-        where: { userId: session.user.id },
-        orderBy: { createdAt: "desc" },
-    });
+        return await prisma.notification.findMany({
+            where: { userId: session.user.id },
+            orderBy: { createdAt: "desc" },
+        });
+    } catch (err) {
+        console.error("getNotifications error:", err);
+        return [];
+    }
 }
 
 export async function markAsRead(id: string) {
@@ -28,13 +33,18 @@ export async function markAsRead(id: string) {
 }
 
 export async function getUnreadCount() {
-    const session = await getSession();
-    if (!session || !session.user) return 0;
+    try {
+        const session = await getSession();
+        if (!session || !session.user) return 0;
 
-    return await prisma.notification.count({
-        where: {
-            userId: session.user.id,
-            isRead: false,
-        },
-    });
+        return await prisma.notification.count({
+            where: {
+                userId: session.user.id,
+                isRead: false,
+            },
+        });
+    } catch (err) {
+        console.error("getUnreadCount error:", err);
+        return 0;
+    }
 }

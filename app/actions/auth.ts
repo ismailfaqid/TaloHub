@@ -5,29 +5,34 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
 export async function getMe() {
-    const supabase = await createClient();
-    const { data: { user }, error } = await supabase.auth.getUser();
-    
-    if (error || !user) return null;
+    try {
+        const supabase = await createClient();
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error || !user) return null;
 
-    return await prisma.user.findUnique({
-        where: { id: user.id },
-        select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-            isExpert: true,
-            bio: true,
-            image: true,
-            _count: {
-                select: {
-                    followers: true,
-                    following: true,
+        return await prisma.user.findUnique({
+            where: { id: user.id },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                isExpert: true,
+                bio: true,
+                image: true,
+                _count: {
+                    select: {
+                        followers: true,
+                        following: true,
+                    }
                 }
-            }
-        },
-    });
+            },
+        });
+    } catch (err) {
+        console.error("getMe error:", err);
+        return null;
+    }
 }
 
 export async function signup(formData: FormData) {
