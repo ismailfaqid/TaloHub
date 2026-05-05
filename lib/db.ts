@@ -7,7 +7,7 @@ export const prisma =
     new PrismaClient({
         datasources: {
             db: {
-                url: process.env.DATABASE_URL || "postgres://615099b5f5425e7a69f40f6ed6b15d7686d3fb283592f550371c4fff14413eeb:sk_mw3qLckAqWr4ccZUk8_g8@db.prisma.io:5432/postgres?sslmode=require",
+                url: "postgres://615099b5f5425e7a69f40f6ed6b15d7686d3fb283592f550371c4fff14413eeb:sk_mw3qLckAqWr4ccZUk8_g8@db.prisma.io:5432/postgres?sslmode=require",
             },
         },
     });
