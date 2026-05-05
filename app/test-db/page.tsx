@@ -1,4 +1,4 @@
-import prisma from "@/lib/db";
+import prisma from "@/lib/prisma";
 
 export default async function TestDBPage() {
     let status = "Checking...";

@@ -42,5 +42,8 @@
     "prisma": "^7.7.0",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "overrides": {
+    "@prisma/client": "^7.7.0"
   }
 }
