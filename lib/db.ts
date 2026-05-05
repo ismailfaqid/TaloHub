@@ -1,21 +1,17 @@
 import { PrismaClient } from "../prisma/generated/client";
 
-const prismaClientSingleton = () => {
-    return new PrismaClient({
+const globalForPrisma = global as unknown as { prisma: PrismaClient };
+
+export const prisma =
+    globalForPrisma.prisma ||
+    new PrismaClient({
         datasources: {
             db: {
-                url: "postgresql://postgres.dqdahbklfuidrtyjiykt:I2F7GNoWhn11q6or@aws-1-ap-northeast-2.pooler.supabase.com:6543/postgres?sslmode=require&pgbouncer=true&connection_limit=1"
-            }
-        }
+                url: process.env.DATABASE_URL || "postgres://615099b5f5425e7a69f40f6ed6b15d7686d3fb283592f550371c4fff14413eeb:sk_mw3qLckAqWr4ccZUk8_g8@db.prisma.io:5432/postgres?sslmode=require",
+            },
+        },
     });
-};
 
-declare global {
-    var prisma: undefined | ReturnType<typeof prismaClientSingleton>;
-}
-
-const prisma = globalThis.prisma ?? prismaClientSingleton();
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 export default prisma;
-
-if (process.env.NODE_ENV !== "production") globalThis.prisma = prisma;
