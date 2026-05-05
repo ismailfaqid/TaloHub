@@ -11,25 +11,25 @@ datasource db {
 }
 
 model User {
-  id           String         @id
-  name         String?
-  email        String         @unique
-  passwordHash String?
-  role         String         @default("USER")
-  isExpert     Boolean        @default(false)
-  bio          String?
-  image        String?
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  questions    Question[]
-  answers      Answer[]
-  likes        Like[]
-  dislikes     Dislike[]
-  answerLikes  AnswerLike[]
+  id             String          @id
+  name           String?
+  email          String          @unique
+  passwordHash   String?
+  role           String          @default("USER")
+  isExpert       Boolean         @default(false)
+  bio            String?
+  image          String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  questions      Question[]
+  answers        Answer[]
+  likes          Like[]
+  dislikes       Dislike[]
+  answerLikes    AnswerLike[]
   answerDislikes AnswerDislike[]
-  notifications Notification[]
-  followers    Follow[]       @relation("UserFollowers")
-  following    Follow[]       @relation("UserFollowing")
+  notifications  Notification[]
+  followers      Follow[]        @relation("UserFollowers")
+  following      Follow[]        @relation("UserFollowing")
 }
 
 model Follow {
@@ -43,29 +43,29 @@ model Follow {
 }
 
 model Question {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   title       String
   content     String
   category    String
-  type        String   @default("QUESTION")
+  type        String    @default("QUESTION")
   authorId    String
-  author      User     @relation(fields: [authorId], references: [id])
-  views       Int      @default(0)
-  createdAt   DateTime @default(now())
-  isAnonymous Boolean  @default(false)
+  author      User      @relation(fields: [authorId], references: [id])
+  views       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  isAnonymous Boolean   @default(false)
   answers     Answer[]
   likes       Like[]
   dislikes    Dislike[]
 }
 
 model Answer {
-  id         String   @id @default(cuid())
+  id         String          @id @default(cuid())
   content    String
   authorId   String
-  author     User     @relation(fields: [authorId], references: [id])
+  author     User            @relation(fields: [authorId], references: [id])
   questionId String
-  question   Question @relation(fields: [questionId], references: [id])
-  createdAt  DateTime @default(now())
+  question   Question        @relation(fields: [questionId], references: [id])
+  createdAt  DateTime        @default(now())
   likes      AnswerLike[]
   dislikes   AnswerDislike[]
 }
@@ -93,23 +93,23 @@ model Dislike {
 }
 
 model AnswerLike {
-  id         String   @id @default(cuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id])
-  answerId   String
-  answer     Answer   @relation(fields: [answerId], references: [id])
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  answerId  String
+  answer    Answer   @relation(fields: [answerId], references: [id])
+  createdAt DateTime @default(now())
 
   @@unique([userId, answerId])
 }
 
 model AnswerDislike {
-  id         String   @id @default(cuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id])
-  answerId   String
-  answer     Answer   @relation(fields: [answerId], references: [id])
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  answerId  String
+  answer    Answer   @relation(fields: [answerId], references: [id])
+  createdAt DateTime @default(now())
 
   @@unique([userId, answerId])
 }
@@ -118,7 +118,7 @@ model Notification {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id])
-  type      String   // e.g., "ANSWER", "LIKE"
+  type      String // e.g., "ANSWER", "LIKE"
   message   String
   link      String
   isRead    Boolean  @default(false)
