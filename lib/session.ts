@@ -2,7 +2,7 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-const secretKey = process.env.AUTH_SECRET;
+const secretKey = process.env.AUTH_SECRET || "fallback_secret_key_for_development_and_vercel_if_missing_1234567890";
 const key = new TextEncoder().encode(secretKey);
 
 export async function encrypt(payload: any) {

@@ -38,16 +38,16 @@ export async function signup(formData: FormData) {
         return { error: "Fadlan buuxi dhammaan meelaha bannaan." };
     }
 
-    const existingUser = await prisma.user.findUnique({
-        where: { email },
-    });
-
-    if (existingUser) {
-        return { error: "Iimaylkan mar hore ayaa la isticmaalay." };
-    }
-
-    const passwordHash = await hash(password, 10);
     try {
+        const existingUser = await prisma.user.findUnique({
+            where: { email },
+        });
+
+        if (existingUser) {
+            return { error: "Iimaylkan mar hore ayaa la isticmaalay." };
+        }
+
+        const passwordHash = await hash(password, 10);
         const user = await prisma.user.create({
             data: {
                 name,
@@ -62,12 +62,12 @@ export async function signup(formData: FormData) {
             name: user.name,
             role: user.role,
         });
+
+        return { success: true };
     } catch (e) {
         console.error("Signup error details:", e);
         return { error: "Xogta lama kaydin karo hadda. Fadlan mar kale isku day." };
     }
-
-    return { success: true };
 }
 
 export async function loginAction(formData: FormData) {
@@ -78,33 +78,33 @@ export async function loginAction(formData: FormData) {
         return { error: "Fadlan buuxi dhammaan meelaha bannaan." };
     }
 
-    const user = await prisma.user.findUnique({
-        where: { email },
-    });
-
-    if (!user) {
-        return { error: "Iimaylka ama erayga sirta ah waa khalad." };
-    }
-
-    const isValid = await compare(password, user.passwordHash);
-
-    if (!isValid) {
-        return { error: "Iimaylka ama erayga sirta ah waa khalad." };
-    }
-
     try {
+        const user = await prisma.user.findUnique({
+            where: { email },
+        });
+
+        if (!user) {
+            return { error: "Iimaylka ama erayga sirta ah waa khalad." };
+        }
+
+        const isValid = await compare(password, user.passwordHash);
+
+        if (!isValid) {
+            return { error: "Iimaylka ama erayga sirta ah waa khalad." };
+        }
+
         await login({
             id: user.id,
             email: user.email,
             name: user.name,
             role: user.role,
         });
+
+        return { success: true };
     } catch (e) {
         console.error("Login error details:", e);
         return { error: "Waxa dhacay qalad xagga xiriirka ah." };
     }
-
-    return { success: true };
 }
 
 export async function logoutAction() {
