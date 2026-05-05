@@ -137,6 +137,22 @@ export async function requestPasswordReset(email: string) {
     }
 }
 
+export async function verifyOtp(email: string, token: string) {
+    try {
+        const supabase = await createClient();
+        const { error } = await supabase.auth.verifyOtp({
+            email,
+            token,
+            type: "recovery",
+        });
+
+        if (error) return { error: error.message };
+        return { success: true };
+    } catch (err) {
+        return { error: "Something went wrong" };
+    }
+}
+
 export async function resetPassword(password: string) {
     try {
         const supabase = await createClient();

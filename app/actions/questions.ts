@@ -649,11 +649,12 @@ export async function toggleFollow(followingId: string) {
         });
 
         // Create notification
-        await (prisma as any).notification.create({
+        const actorName = (session.user as any).user_metadata?.full_name || "Someone";
+        await prisma.notification.create({
             data: {
                 userId: followingId,
                 type: "FOLLOW",
-                message: `${session.user.name || "Someone"} started following you`,
+                message: `${actorName} started following you`,
                 link: `/profile/${followerId}`
             }
         });

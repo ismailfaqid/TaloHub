@@ -7,7 +7,7 @@ import { ArrowLeft, Mail, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useState, useRef, Suspense } from "react";
-import { verifyCode } from "@/app/actions/auth";
+import { verifyOtp } from "@/app/actions/auth";
 
 function VerifyCodeForm() {
     const searchParams = useSearchParams();
@@ -52,9 +52,9 @@ function VerifyCodeForm() {
         setError(null);
 
         try {
-            const result = await verifyCode(email, fullCode);
+            const result = await verifyOtp(email, fullCode);
             if (result.success) {
-                router.push(`/reset-password?email=${encodeURIComponent(email)}&code=${encodeURIComponent(fullCode)}`);
+                router.push(`/reset-password`);
             } else {
                 setError(result.error || "Koodhka waa khaldan yahay.");
             }

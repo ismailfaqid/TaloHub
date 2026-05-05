@@ -33,7 +33,7 @@ function ResetPasswordForm() {
         }
 
         try {
-            const result = await resetPassword(email, code, newPassword);
+            const result = await resetPassword(newPassword);
             if (result.success) {
                 router.push("/reset-success");
             } else {
