@@ -34,9 +34,9 @@ export default function LoginPage() {
             } else if (result?.success) {
                 router.push("/");
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error("Login submission error:", err);
-            setError(tc.error);
+            setError(err.message || tc.error);
             setIsLoading(false);
         }
     }

@@ -1,16 +1,17 @@
 "use server";
 
 import prisma from "@/lib/db";
-import { hash, compare } from "bcryptjs";
-import { login, logout, getSession } from "@/lib/session";
+import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
 export async function getMe() {
-    const session = await getSession();
-    if (!session || !session.user) return null;
+    const supabase = await createClient();
+    const { data: { user }, error } = await supabase.auth.getUser();
+    
+    if (error || !user) return null;
 
     return await prisma.user.findUnique({
-        where: { id: session.user.id },
+        where: { id: user.id },
         select: {
             id: true,
             name: true,
@@ -38,7 +39,10 @@ export async function signup(formData: FormData) {
         return { error: "Fadlan buuxi dhammaan meelaha bannaan." };
     }
 
+    const supabase = await createClient();
+
     try {
+        // 0. Check if user already exists in Prisma to avoid unique constraint errors
         const existingUser = await prisma.user.findUnique({
             where: { email },
         });
@@ -47,26 +51,39 @@ export async function signup(formData: FormData) {
             return { error: "Iimaylkan mar hore ayaa la isticmaalay." };
         }
 
-        const passwordHash = await hash(password, 10);
-        const user = await prisma.user.create({
-            data: {
-                name,
-                email,
-                passwordHash,
+        // 1. Sign up with Supabase
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: {
+                    full_name: name,
+                },
             },
         });
 
-        await login({
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            role: user.role,
+        if (authError) {
+            console.error("Supabase signup error:", authError);
+            return { error: authError.message };
+        }
+
+        if (!authData.user) {
+            return { error: "Xogta isticmaalaha lama helin." };
+        }
+
+        // 2. Create user in Prisma using Supabase ID
+        await prisma.user.create({
+            data: {
+                id: authData.user.id,
+                name,
+                email,
+            },
         });
 
         return { success: true };
-    } catch (e) {
-        console.error("Signup error details:", e);
-        return { error: "Xogta lama kaydin karo hadda. Fadlan mar kale isku day." };
+    } catch (e: any) {
+        console.error("Signup exception:", e);
+        return { error: e.message || "Xogta lama kaydin karo hadda. Fadlan mar kale isku day." };
     }
 }
 
@@ -78,162 +95,93 @@ export async function loginAction(formData: FormData) {
         return { error: "Fadlan buuxi dhammaan meelaha bannaan." };
     }
 
+    const supabase = await createClient();
+
     try {
-        const user = await prisma.user.findUnique({
-            where: { email },
+        const { error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
         });
 
-        if (!user) {
-            return { error: "Iimaylka ama erayga sirta ah waa khalad." };
+        if (error) {
+            console.error("Supabase login error:", error);
+            return { error: error.message };
         }
-
-        const isValid = await compare(password, user.passwordHash);
-
-        if (!isValid) {
-            return { error: "Iimaylka ama erayga sirta ah waa khalad." };
-        }
-
-        await login({
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            role: user.role,
-        });
 
         return { success: true };
-    } catch (e) {
-        console.error("Login error details:", e);
-        return { error: "Waxa dhacay qalad xagga xiriirka ah." };
+    } catch (e: any) {
+        console.error("Login exception:", e);
+        return { error: e.message || "Waxa dhacay qalad xagga xiriirka ah." };
     }
 }
 
 export async function logoutAction() {
-    await logout();
+    const supabase = await createClient();
+    await supabase.auth.signOut();
     redirect("/");
 }
 
 export async function requestPasswordReset(email: string) {
-    const user = await prisma.user.findUnique({
-        where: { email },
+    const supabase = await createClient();
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/reset-password`,
     });
 
-    if (!user) {
-        // We returning success even if user not found for security reasons
-        return { success: true };
-    }
-
-    const token = Math.floor(1000 + Math.random() * 9000).toString(); // 4 digit OTP
-    const expires = new Date(Date.now() + 3600000); // 1 hour
-
-    await prisma.verificationToken.upsert({
-        where: {
-            identifier_token: {
-                identifier: email,
-                token: token,
-            },
-        },
-        update: { expires },
-        create: {
-            identifier: email,
-            token,
-            expires,
-        },
-    });
-
-    // In a real app, you would send this via email. For now, we'll just log it.
-    console.log(`Password reset code for ${email}: ${token}`);
-
-    return { success: true };
-}
-
-export async function verifyCode(email: string, code: string) {
-    const tokenRecord = await prisma.verificationToken.findUnique({
-        where: {
-            identifier_token: {
-                identifier: email,
-                token: code,
-            },
-        },
-    });
-
-    if (!tokenRecord || tokenRecord.expires < new Date()) {
-        return { error: "Koodhka waa khalad ama wuu dhacay." };
+    if (error) {
+        console.error("Password reset request error:", error);
+        return { error: error.message };
     }
 
     return { success: true };
 }
 
-export async function resetPassword(email: string, code: string, newPassword: string) {
-    const tokenRecord = await prisma.verificationToken.findUnique({
-        where: {
-            identifier_token: {
-                identifier: email,
-                token: code,
-            },
-        },
+export async function resetPassword(password: string) {
+    const supabase = await createClient();
+    const { error } = await supabase.auth.updateUser({
+        password: password,
     });
 
-    if (!tokenRecord || tokenRecord.expires < new Date()) {
-        return { error: "Koodhka waa khalad ama wuu dhacay." };
+    if (error) {
+        console.error("Password reset error:", error);
+        return { error: error.message };
     }
-
-    const passwordHash = await hash(newPassword, 10);
-
-    await prisma.user.update({
-        where: { email },
-        data: { passwordHash },
-    });
-
-    // Delete the token
-    await prisma.verificationToken.delete({
-        where: { id: tokenRecord.id },
-    });
 
     return { success: true };
 }
 
 export async function updateAccount(formData: FormData) {
-    const session = await getSession();
-    if (!session || !session.user) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
         return { error: "Lama ogola." };
     }
 
     const name = formData.get("name") as string;
-    const email = formData.get("email") as string;
-    const newPassword = formData.get("new-pass") as string;
-    const confirmPassword = formData.get("confirm-pass") as string;
     const bio = formData.get("bio") as string;
     const image = formData.get("image") as string; // Expecting base64 string
 
     const data: any = {};
     if (name) data.name = name;
-    if (email) data.email = email;
     if (bio !== null) data.bio = bio;
     if (image) data.image = image;
 
-    if (newPassword) {
-        if (newPassword !== confirmPassword) {
-            return { error: "Password-ka cusub iyo kan xaqiijinta isma laha." };
-        }
-        data.passwordHash = await hash(newPassword, 10);
-    }
-
     try {
-        const updatedUser = await prisma.user.update({
-            where: { id: session.user.id },
+        await prisma.user.update({
+            where: { id: user.id },
             data,
         });
 
-        // Update the session with new info
-        await login({
-            id: updatedUser.id,
-            email: updatedUser.email,
-            name: updatedUser.name,
-            role: updatedUser.role,
-        });
+        // Also update Supabase metadata if name changed
+        if (name) {
+            await supabase.auth.updateUser({
+                data: { full_name: name }
+            });
+        }
 
         return { success: true };
-    } catch (err) {
-        return { error: "Waxbaa khaldamay markii la kaydinayay xogta." };
+    } catch (err: any) {
+        console.error("Update account error:", err);
+        return { error: err.message || "Waxbaa khaldamay markii la kaydinayay xogta." };
     }
 }

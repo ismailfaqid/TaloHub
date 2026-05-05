@@ -33,9 +33,9 @@ export default function SignupPage() {
             } else if (result?.success) {
                 router.push("/");
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error("Signup submission error:", err);
-            setError("Waxbaa khaldamay, fadlan isku day markale.");
+            setError(err.message || "Waxbaa khaldamay, fadlan isku day markale.");
             setIsLoading(false);
         }
     }

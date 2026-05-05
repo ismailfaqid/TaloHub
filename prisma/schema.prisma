@@ -9,10 +9,10 @@ datasource db {
 }
 
 model User {
-  id           String         @id @default(cuid())
+  id           String         @id
   name         String?
   email        String         @unique
-  passwordHash String
+  passwordHash String?
   role         String         @default("USER")
   isExpert     Boolean        @default(false)
   bio          String?
