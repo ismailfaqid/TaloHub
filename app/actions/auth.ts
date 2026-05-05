@@ -39,9 +39,8 @@ export async function signup(formData: FormData) {
         return { error: "Fadlan buuxi dhammaan meelaha bannaan." };
     }
 
-    const supabase = await createClient();
-
     try {
+        const supabase = await createClient();
         // 0. Check if user already exists in Prisma to avoid unique constraint errors
         const existingUser = await prisma.user.findUnique({
             where: { email },
@@ -95,9 +94,8 @@ export async function loginAction(formData: FormData) {
         return { error: "Fadlan buuxi dhammaan meelaha bannaan." };
     }
 
-    const supabase = await createClient();
-
     try {
+        const supabase = await createClient();
         const { error } = await supabase.auth.signInWithPassword({
             email,
             password,
@@ -122,8 +120,9 @@ export async function logoutAction() {
 }
 
 export async function requestPasswordReset(email: string) {
-    const supabase = await createClient();
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    try {
+        const supabase = await createClient();
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/reset-password`,
     });
 
@@ -132,41 +131,50 @@ export async function requestPasswordReset(email: string) {
         return { error: error.message };
     }
 
-    return { success: true };
+        return { success: true };
+    } catch (e: any) {
+        return { error: e.message };
+    }
 }
 
 export async function resetPassword(password: string) {
-    const supabase = await createClient();
-    const { error } = await supabase.auth.updateUser({
-        password: password,
-    });
+    try {
+        const supabase = await createClient();
+        const { error } = await supabase.auth.updateUser({
+            password: password,
+        });
 
-    if (error) {
-        console.error("Password reset error:", error);
-        return { error: error.message };
+        if (error) {
+            console.error("Password reset error:", error);
+            return { error: error.message };
+        }
+
+        return { success: true };
+    } catch (e: any) {
+        return { error: e.message };
     }
-
-    return { success: true };
 }
 
 export async function updateAccount(formData: FormData) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-        return { error: "Lama ogola." };
-    }
-
-    const name = formData.get("name") as string;
-    const bio = formData.get("bio") as string;
-    const image = formData.get("image") as string; // Expecting base64 string
-
-    const data: any = {};
-    if (name) data.name = name;
-    if (bio !== null) data.bio = bio;
-    if (image) data.image = image;
-
     try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+            return { error: "Lama ogola." };
+        }
+
+        const name = formData.get("name") as string;
+        const email = formData.get("email") as string;
+        const bio = formData.get("bio") as string;
+        const image = formData.get("image") as string; // Expecting base64 string
+
+        const data: any = {};
+        if (name) data.name = name;
+        if (email) data.email = email;
+        if (bio !== null) data.bio = bio;
+        if (image) data.image = image;
+
         await prisma.user.update({
             where: { id: user.id },
             data,
